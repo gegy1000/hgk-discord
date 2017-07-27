@@ -36,7 +36,8 @@ object HGKWebAPI : HGK {
             client.newCall(request).execute().use { response ->
                 val responseBody = response.body().string()
                 val data = gson.fromJson(responseBody, SessionDataModel::class.java)
-                return GameSession(channelId, getSetupInfo(data.identifier))
+                val setupInfo = getSetupInfo(data.identifier)
+                return GameSession(channelId, setupInfo)
             }
         } catch (e: IOException) {
             throw RequestErrorException(cause = e)

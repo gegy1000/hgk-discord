@@ -4,7 +4,11 @@ import net.gegy1000.hgk.model.PlayerInfoModel
 import net.gegy1000.hgk.model.PlayerInfoModel.Pronoun
 import net.gegy1000.hgk.session.SessionBuilder
 import sx.blah.discord.handle.obj.IMessage
+import java.awt.image.BufferedImage
+import java.io.File
 import java.util.Locale
+import javax.imageio.ImageIO
+import kotlin.concurrent.thread
 
 const val COMMAND_PREFIX = "."
 
@@ -58,6 +62,27 @@ val STOP = Command("stop") { message, args ->
     }
 }
 
-val COMMANDS = arrayOf(BUILD_GAME, JOIN_SESSION, START, STOP)
+val MAP = Command("map") { message, args ->
+    val channelId = message.channel.id
+    val session = HGKDiscord.activeSessions.filter { it.channelId == channelId }.firstOrNull()
+    if (session != null) {
+        thread(name = "Map Generation", start = true, isDaemon = true) {
+            val image = BufferedImage(session.size, session.size, BufferedImage.TYPE_INT_RGB)
+            repeat(image.height) { localY ->
+                repeat(image.width) { localX ->
+                    image.setRGB(localX, localY, session.tiles[localX + localY * session.size].colour)
+                }
+            }
+            val tempFile = File("map_${channelId}_${System.nanoTime()}.png")
+            ImageIO.write(image, "png", tempFile)
+            message.channel.sendFile(tempFile)
+            tempFile.delete()
+        }
+    } else {
+        message.channel.sendMessage("No session active in ${message.channel.mention()}")
+    }
+}
+
+val COMMANDS = arrayOf(BUILD_GAME, JOIN_SESSION, START, STOP, MAP)
 
 class Command(val name: String, val usage: String = name, val handle: (message: IMessage, args: Array<String>) -> Unit)

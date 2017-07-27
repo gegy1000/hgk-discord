@@ -9,6 +9,11 @@ import kotlin.concurrent.fixedRateTimer
 class GameSession(val channelId: String, val setupInfo: SessionSetupModel) {
     val identifier = setupInfo.identifier
 
+    val size = setupInfo.arena.size
+    val tiles = Array(setupInfo.arena.tiles.size) {
+        Tile(setupInfo.arena.tiles[it])
+    }
+
     var updateIndex: Int = 0
 
     var cancel: Boolean = false
